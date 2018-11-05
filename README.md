@@ -60,6 +60,7 @@ Gin is a web framework written in Go (Golang). It features a martini-like API wi
     - [Try to bind body into different structs](#try-to-bind-body-into-different-structs)
     - [http2 server push](#http2-server-push)
     - [Define format for the log of routes](#define-format-for-the-log-of-routes)
+    - [Set and get a cookie](#set-and-get-a-cookie)
 - [Testing](#testing)
 - [Users](#users)
 
@@ -823,12 +824,12 @@ form.html
 <form action="/" method="POST">
     <p>Check some colors</p>
     <label for="red">Red</label>
-    <input type="checkbox" name="colors[]" value="red" id="red" />
+    <input type="checkbox" name="colors[]" value="red" id="red">
     <label for="green">Green</label>
-    <input type="checkbox" name="colors[]" value="green" id="green" />
+    <input type="checkbox" name="colors[]" value="green" id="green">
     <label for="blue">Blue</label>
-    <input type="checkbox" name="colors[]" value="blue" id="blue" />
-    <input type="submit" />
+    <input type="checkbox" name="colors[]" value="blue" id="blue">
+    <input type="submit">
 </form>
 ```
 
@@ -1021,7 +1022,7 @@ func main() {
 	})
 	
 	// listen and serve on 0.0.0.0:8080
-	r.Run(":8080)
+	r.Run(":8080")
 }
 ```
 
@@ -1159,7 +1160,7 @@ You may use custom delims
 ```go
 	r := gin.Default()
 	r.Delims("{[{", "}]}")
-	r.LoadHTMLGlob("/path/to/templates"))
+	r.LoadHTMLGlob("/path/to/templates")
 ```
 
 #### Custom Template Funcs
@@ -1880,6 +1881,35 @@ func main() {
 }
 ```
 
+### Set and get a cookie
+
+```go
+import (
+    "fmt"
+
+    "github.com/gin-gonic/gin"
+)
+
+func main() {
+
+    router := gin.Default()
+
+    router.GET("/cookie", func(c *gin.Context) {
+
+        cookie, err := c.Cookie("gin_cookie")
+
+        if err != nil {
+            cookie = "NotSet"
+            c.SetCookie("gin_cookie", "test", 3600, "/", "localhost", false, true)
+        }
+
+        fmt.Printf("Cookie value: %s \n", cookie)
+    })
+
+    router.Run()
+}
+```
+
 
 ## Testing
 
@@ -1934,3 +1964,4 @@ Awesome project lists using [Gin](https://github.com/gin-gonic/gin) web framewor
 * [drone](https://github.com/drone/drone): Drone is a Continuous Delivery platform built on Docker, written in Go.
 * [gorush](https://github.com/appleboy/gorush): A push notification server written in Go.
 * [fnproject](https://github.com/fnproject/fn): The container native, cloud agnostic serverless platform.
+* [photoprism](https://github.com/photoprism/photoprism): Personal photo management powered by Go and Google TensorFlow.
