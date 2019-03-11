@@ -181,6 +181,7 @@ func TestLoggerWithFormatter(t *testing.T) {
 
 func TestLoggerWithConfigFormatting(t *testing.T) {
 	var gotParam LogFormatterParams
+	var gotKeys map[string]interface{}
 	buffer := new(bytes.Buffer)
 
 	router := New()
@@ -204,6 +205,7 @@ func TestLoggerWithConfigFormatting(t *testing.T) {
 	router.GET("/example", func(c *Context) {
 		// set dummy ClientIP
 		c.Request.Header.Set("X-Forwarded-For", "20.20.20.20")
+		gotKeys = c.Keys
 	})
 	performRequest(router, "GET", "/example?a=100")
 
@@ -223,6 +225,7 @@ func TestLoggerWithConfigFormatting(t *testing.T) {
 	assert.Equal(t, "GET", gotParam.Method)
 	assert.Equal(t, "/example?a=100", gotParam.Path)
 	assert.Empty(t, gotParam.ErrorMessage)
+	assert.Equal(t, gotKeys, gotParam.Keys)
 
 }
 
@@ -257,6 +260,13 @@ func TestDefaultLogFormatter(t *testing.T) {
 }
 
 func TestColorForMethod(t *testing.T) {
+	colorForMethod := func(method string) string {
+		p := LogFormatterParams{
+			Method: method,
+		}
+		return p.MethodColor()
+	}
+
 	assert.Equal(t, string([]byte{27, 91, 57, 55, 59, 52, 52, 109}), colorForMethod("GET"), "get should be blue")
 	assert.Equal(t, string([]byte{27, 91, 57, 55, 59, 52, 54, 109}), colorForMethod("POST"), "post should be cyan")
 	assert.Equal(t, string([]byte{27, 91, 57, 48, 59, 52, 51, 109}), colorForMethod("PUT"), "put should be yellow")
@@ -268,10 +278,22 @@ func TestColorForMethod(t *testing.T) {
 }
 
 func TestColorForStatus(t *testing.T) {
+	colorForStatus := func(code int) string {
+		p := LogFormatterParams{
+			StatusCode: code,
+		}
+		return p.StatusCodeColor()
+	}
+
 	assert.Equal(t, string([]byte{27, 91, 57, 55, 59, 52, 50, 109}), colorForStatus(http.StatusOK), "2xx should be green")
 	assert.Equal(t, string([]byte{27, 91, 57, 48, 59, 52, 55, 109}), colorForStatus(http.StatusMovedPermanently), "3xx should be white")
 	assert.Equal(t, string([]byte{27, 91, 57, 48, 59, 52, 51, 109}), colorForStatus(http.StatusNotFound), "4xx should be yellow")
 	assert.Equal(t, string([]byte{27, 91, 57, 55, 59, 52, 49, 109}), colorForStatus(2), "other things should be red")
+}
+
+func TestResetColor(t *testing.T) {
+	p := LogFormatterParams{}
+	assert.Equal(t, string([]byte{27, 91, 48, 109}), p.ResetColor())
 }
 
 func TestErrorLogger(t *testing.T) {
@@ -339,4 +361,11 @@ func TestDisableConsoleColor(t *testing.T) {
 	assert.False(t, disableColor)
 	DisableConsoleColor()
 	assert.True(t, disableColor)
+}
+
+func TestForceConsoleColor(t *testing.T) {
+	New()
+	assert.False(t, forceColor)
+	ForceConsoleColor()
+	assert.True(t, forceColor)
 }
